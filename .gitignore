@@ -1,0 +1,50 @@
+# Local application metadata
+/config/*
+!/config/ps3_presence.conf.example
+
+# Generated builds, downloaded dependencies, and local tooling
+/build/
+/dist/
+/deps/
+/work/
+__pycache__/
+*.py[cod]
+node_modules/
+*.o
+*.d
+*.elf
+*.prx
+*.sprx
+*.self
+*.pkg
+*.map
+*.su
+
+# Credentials and console configuration (including staged/backup saves)
+private/
+*.token
+*.token.*
+*.conf
+*.conf.*
+!*.conf.example
+.env
+.env.*
+!.env.example
+*.key
+*.p12
+*.pfx
+
+# Runtime captures and local editor/OS files
+.codex/
+*.log
+*.jsonl
+*.dmp
+*.core
+*.tmp
+*.bak
+*.swp
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini

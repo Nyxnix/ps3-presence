@@ -1,0 +1,9 @@
+# Copy to /dev_hdd0/tmp/ps3_presence.conf with your own credential to enable transport.
+# A Discord user-session credential is separate from the application/bot secrets.
+enabled=0
+application_id=1545898852773527622
+token=
+status=online
+show_xmb=1
+large_image=1545924328779161670
+small_image=1545924328779161670

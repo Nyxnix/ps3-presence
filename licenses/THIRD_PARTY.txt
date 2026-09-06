@@ -1,0 +1,23 @@
+**Source and toolchain attribution**
+
+- [font8x8](https://github.com/dhepper/font8x8): public-domain basic bitmap font used by the configuration app; upstream notice is retained in `app/font8x8_basic.h`.
+- [PS3 platform IDs](https://www.psdevwiki.com/ps3/Platform_ID#Cookie_Series) and [PSL1GHT ports system-information query](https://github.com/bucanero/psl1ghtv2_ports/blob/master/sm_error_log/source/main.c): references for the read-only 24-byte system-information layout and hardware-family mapping.
+
+This project's source is distributed under GPL-3.0-only; see LICENSE. No third-party SDK binaries are included in the source archive.
+
+- [PSL1GHT](https://github.com/ps3dev/PSL1GHT): open SDK headers used for syscall definitions and types. See upstream LICENSE and individual file notices. Its `fself` utility wraps the generated PRX as a development SELF.
+- [PS3DEV release, July 26, 2026](https://github.com/ps3dev/ps3dev/releases/tag/nightly-2026-07-26): PPU GCC 7.2.0, binutils, SDK, and host utilities. GCC/binutils and bundled libraries retain their upstream licenses. Archive SHA-256: `dcbed747e094c6a382dae5b0aacc322a1d4390d9f2849a7d750a96ea398ee8ab` (matched the release asset digest).
+- [webMAN MOD VSH adapter](https://github.com/aldostools/webMAN-MOD/blob/master/include/init/vsh.h) and [game interface definitions](https://github.com/aldostools/webMAN-MOD/blob/master/vsh/game_plugin.h): GPLv3 reference for VSH export lookup, FNIDs, execution-mode checks, and the title information layout; credits include aldostools, deank, Mysis, and 3141card. This project adds its own bounds checks and platform abstraction.
+- [RPCS3 PPU loader](https://github.com/RPCS3/rpcs3/blob/master/rpcs3/Emu/Cell/PPUModule.cpp): reference for PRX module/export/relocation layouts. The Python packer and verifier are project-specific implementations.
+- [XeCord](https://github.com/UncreativeXenon/XeCord), MIT: inspiration for standalone console presence and the small platform badge. No XeCord networking implementation is included.
+- [PS3-Rich-Presence-for-Discord](https://github.com/zorua98741/PS3-Rich-Presence-for-Discord): feature reference only; its Python code is not included.
+- [Mbed TLS 3.6.6](https://github.com/Mbed-TLS/mbedtls/releases/tag/mbedtls-3.6.6): TLS and cryptography, used under Apache-2.0; upstream also offers GPL-2.0-or-later. Full notices are in `licenses/MbedTLS.txt`. Archive SHA-256: `8fb65fae8dcae5840f793c0a334860a411f884cc537ea290ce1c52bb64ca007a`. Sources are obtained by `tools/fetch-deps.py`; custom configuration and platform adapters live in this project.
+- [Google Trust Services roots](https://pki.goog/roots.pem): GTS Root R1/R2/R3/R4 certificates embedded for the currently observed Discord Gateway chain. Certificate rotation may require a trust-store update; verification is never disabled as a fallback.
+- [jsmn](https://github.com/zserge/jsmn), Serge Zaitsev, MIT: bounded Hello/ACK tokenization; original notice retained in `net/jsmn.h`. Included header SHA-256: `c04533e9181e1e33baceb0f55ac449b05145bb936e8c68cc77dfe0d8277514fb`.
+
+Asset attribution
+
+The PS3 wordmark is Sony Computer Entertainment's logo, sourced from:
+https://commons.wikimedia.org/wiki/File:PlayStation_3_Logo.svg
+
+Original vector: `ps3-wordmark.svg`. The Commons page classifies this simple text logo as public domain; the Sony/PlayStation trademarks remain their owners'.
