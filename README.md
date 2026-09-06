@@ -1,3 +1,7 @@
+> ⚠️ **Warning:** This uses the **Discord User Gateway** and is therefore **against Discord’s Terms of Service**.
+>
+> Use this **at your own risk**. Discord may terminate accounts for this use; see its [policy on automated user accounts](https://support.discord.com/hc/en-us/articles/115002192352-Automated-User-Accounts-Self-Bots).
+
 <p align="center">
   <img src="assets/ps3-logo.png" width="112" alt="PS3 logo">
 </p>
