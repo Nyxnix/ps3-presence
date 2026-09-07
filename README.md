@@ -6,14 +6,22 @@
   <img src="assets/ps3-logo.png" width="112" alt="PS3 logo">
 </p>
 
-<h1 align="center">PS3 Presence</h1>
+<h1 align="center">PS3 Presence — Discord Rich Presence for PlayStation 3</h1>
 
 <p align="center">Discord Rich Presence, directly from your PlayStation 3.</p>
 <p align="center"><strong>Version 0.4.0 · Development build · CFW + Cobra</strong></p>
 
-Show what you’re playing on Discord with game artwork, console information, temperatures, and elapsed time. Everything runs on the PS3—no PC application is needed during play.
+PS3 Presence brings Discord Rich Presence to your PlayStation 3, showing your game, cover art, console information, temperatures, and elapsed time. Everything runs on the PS3—no PC application is needed during play.
 
 > Requires a PS3 running CFW with Cobra enabled and webMAN MOD installed. HEN is not currently supported.
+
+<p align="center">
+  <a href="https://github.com/Nyxnix/ps3-presence/releases/latest"><strong>Download latest release</strong></a> · <a href="#installation">Installation instructions</a>
+</p>
+
+<p align="center">
+  <img src="assets/presence-armored-core-v.png" width="402" height="165" alt="PS3 Discord Rich Presence showing Armored Core V, game cover art, console model, temperatures, and elapsed time">
+</p>
 
 ## ✨ Features
 
@@ -30,7 +38,6 @@ Show what you’re playing on Discord with game artwork, console information, te
 | --- | --- |
 | **XMB** | <img src="assets/presence-xmb.png" width="402" height="165" alt="XMB activity with the PS3 wordmark, model family, temperatures, and elapsed time"> |
 | **Hatsune Miku: Project DIVA F 2nd** | <img src="assets/presence-project-diva.png" width="402" height="165" alt="Hatsune Miku: Project DIVA F 2nd activity with cover artwork, small PS3 badge, model family, temperatures, and elapsed time"> |
-| **ARMORED CORE V** | <img src="assets/presence-armored-core-v.png" width="402" height="165" alt="ARMORED CORE V activity with cover artwork, small PS3 badge, model family, temperatures, and elapsed time"> |
 | **Transformers: War for Cybertron** | <img src="assets/presence-transformers.png" width="402" height="165" alt="Transformers: War for Cybertron activity with cover artwork, small PS3 badge, model family, temperatures, and elapsed time"> |
 
 ## 🔧 Setup
