@@ -5,7 +5,7 @@
 #include <string.h>
 extern uint32_t presence_export(const char *,uint32_t);
 extern int presence_is_running(void);
-extern void presence_stack_sample(unsigned);
+#include "diagnostics.h"
 extern uint64_t vsh_call(uint32_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t);
 #define V(fn,a,b,c,d,e) vsh_call(fn,(uint64_t)(a),(uint64_t)(b),(uint64_t)(c),(uint64_t)(d),(uint64_t)(e),0,0)
 static uint32_t sock_fn,connect_fn,send_fn,recv_fn,close_fn,opt_fn,poll_fn,errno_fn,getopt_fn;

@@ -2,8 +2,7 @@
 #include "transport.h"
 #include "tls_port.h"
 #include "memory_owner.h"
-extern void presence_stack_sample(unsigned);
-extern uint32_t presence_stack_stat(unsigned,unsigned);
+#include "diagnostics.h"
 #include "artwork.h"
 #include "artwork_session.h"
 #include "presence_clock.h"
@@ -121,6 +120,7 @@ void net_close(void) {
     else close_failures++;
 }
 /* These cold report helpers otherwise get duplicated at every field at -O2. */
+#if PRESENCE_DIAGNOSTICS
 static __attribute__((noinline)) void append(char *out,size_t *n,const char *s) { while(*s && *n<1534) out[(*n)++]=*s++; }
 static __attribute__((noinline)) void number(char *out,size_t *n,uint64_t value) { char b[21]; unsigned i=0; do { b[i++]=(char)('0'+value%10); value/=10; } while(value); while(i && *n<1534) out[(*n)++]=b[--i]; }
 void net_report(const char *stage,int error,uint32_t verify,size_t peak,uint64_t elapsed,unsigned heartbeat) {
@@ -159,6 +159,7 @@ void net_report(const char *stage,int error,uint32_t verify,size_t peak,uint64_t
         }
     }
 }
+#endif
 static int32_t release_pages(uint32_t address) { return sysMemoryFree(address); }
 static int free_arena(void) {
     if(!arena_owner.address) return 0;
@@ -197,12 +198,11 @@ int net_config_changed(const struct discord_config *config) {
 }
 void presence_network_worker(uint64_t arg) {
     struct discord_client client; struct discord_config config,last;
-    unsigned have_last=0,probed=0,waiting=0,blocked=0;
+    unsigned have_last=0,waiting=0,blocked=0;
     (void)arg; presence_stack_sample(1); discord_client_init(&client); memset(&last,0,sizeof(last));
     while(!net_cancelled()) {
         int valid=read_config(&config);
         if(!valid || !config.enabled) {
-            if(!probed && !allocate_arena()) { transport_probe("gateway.discord.gg"); free_arena(); probed=1; }
             if(!waiting) { net_report("waiting_config",0,0,0,0,0); waiting=1; }
             have_last=0; discord_wipe(&last,sizeof(last));
         } else {

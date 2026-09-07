@@ -21,14 +21,27 @@ void screen_render(uint32_t *p,unsigned w,unsigned h,unsigned selected,int token
     origin=w>640*scale?(w-640*scale)/2:0;
     for(unsigned i=0;i<w*h;i++) p[i]=0x101118;
     text(40,32,"PS3 Presence",3,0xf5f3fa);
-    text(42,70,installer?"INSTALLER":"CONFIGURATION",1,0xa99ab9);
-    rect(40,103,560,60,selected==0?0x443153:0x21212b);
-    rect(40,176,560,60,selected==1?0x443153:0x21212b);
-    rect(40,103+selected*73,4,60,0xb28cd9);
-    text(58,124,"Token:",2,0xf5f3fa);
-    text(220,124,token_set?"********  Edit":"Not set   Add",2,0xccc1da);
-    text(58,197,"Presence:",2,0xf5f3fa);
-    text(420,197,enabled?"ON":"OFF",2,enabled?0x8bd6a1:0xb8b3c1);
+    text(42,70,installer==APP_CONFIRM_REMOVE?"UNINSTALL":installer==APP_REMOVED?"REMOVED":(installer==APP_INSTALLER || installer==APP_RESTARTING)?"INSTALLER":"CONFIGURATION",1,0xa99ab9);
+    if(installer==APP_CONFIRM_REMOVE) {
+        text(42,112,"Remove PS3 Presence?",2,0xf5f3fa);
+        text(42,153,"Deletes the app, plugin, startup entries,",1,0xd2c9dd);
+        text(42,171,"saved token, settings and diagnostic files.",1,0xd2c9dd);
+        text(42,204,"Other apps and plugins are kept.",1,0xd2c9dd);
+    } else if(installer==APP_REMOVED) {
+        text(42,124,"Uninstall complete",2,0x8bd6a1);
+        text(42,169,"The plugin has stopped and its files are removed.",1,0xd2c9dd);
+    } else if(installer==APP_RESTARTING) {
+        text(42,124,"Installation complete",2,0x8bd6a1);
+        text(42,169,"Your PS3 will restart to activate this build.",1,0xd2c9dd);
+    } else {
+        for(unsigned row=0;row<3;row++) rect(40,98+row*52,560,43,selected==row?0x443153:0x21212b);
+        rect(40,98+selected*52,4,43,0xb28cd9);
+        text(58,112,"Token:",2,0xf5f3fa);
+        text(220,112,token_set?"********  Edit":"Not set   Add",2,0xccc1da);
+        text(58,164,"Presence:",2,0xf5f3fa);
+        text(420,164,enabled?"ON":"OFF",2,enabled?0x8bd6a1:0xb8b3c1);
+        text(58,216,"Uninstall",2,0xf0b1ba);
+    }
     if(message && *message) {
         /* Wrap messages at whole words into the footer, without leaking tokens. */
         char line[68]; unsigned at=0,y=254;
@@ -41,6 +54,8 @@ void screen_render(uint32_t *p,unsigned w,unsigned h,unsigned selected,int token
             at=0; y+=12;
         }
     }
-    text(42,310,"UP/DOWN Select    X Edit / Toggle    O Exit",1,0xe4dceb);
-    text(42,331,"Hold L1 when launching to install or update",1,0x9d94a9);
+    if(installer!=APP_RESTARTING)
+        text(42,310,installer==APP_CONFIRM_REMOVE?"X Uninstall    O Cancel":installer==APP_REMOVED?"O Return to XMB":"UP/DOWN Select    X Choose    O Exit",1,0xe4dceb);
+    if(installer==APP_SETTINGS || installer==APP_INSTALLER)
+        text(42,331,"Hold L1 when launching to install or update",1,0x9d94a9);
 }

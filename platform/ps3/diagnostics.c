@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include "diagnostics.h"
+#if PRESENCE_DIAGNOSTICS
 #include <sys/thread.h>
 /* Samples live SP only; never writes into unused stack memory. This is a
  * sampled maximum, not a complete call-depth watermark or a fault handler. */
@@ -26,3 +28,4 @@ uint32_t presence_stack_stat(unsigned worker,unsigned stat) {
     if(stat==1) return __atomic_load_n(&stacks[worker].peak,__ATOMIC_RELAXED);
     return (uint32_t)__atomic_load_n(&stacks[worker].error,__ATOMIC_RELAXED);
 }
+#endif

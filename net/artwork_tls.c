@@ -34,7 +34,7 @@ int artwork_fetch(const struct discord_config *config,const char title_id[10],ch
     if(put(payload,&payload_n,sizeof(payload),"{\"urls\":[\"") || put(payload,&payload_n,sizeof(payload),url) || put(payload,&payload_n,sizeof(payload),"\"]}")) goto done;
     size_t value=payload_n,at=sizeof(digits)-1; digits[at]=0;
     do { digits[--at]=(char)('0'+value%10); value/=10; } while(value);
-    if(put(request,&n,sizeof(request),"POST /api/v10/applications/") || put(request,&n,sizeof(request),config->application_id) || put(request,&n,sizeof(request),"/external-assets HTTP/1.1\r\nHost: discord.com\r\nUser-Agent: PS3Presence/0.3\r\nAuthorization: ") || put(request,&n,sizeof(request),config->token) || put(request,&n,sizeof(request),"\r\nContent-Type: application/json\r\nAccept-Encoding: identity\r\nConnection: close\r\nContent-Length: ") || put(request,&n,sizeof(request),digits+at) || put(request,&n,sizeof(request),"\r\n\r\n") || put(request,&n,sizeof(request),payload)) goto done;
+    if(put(request,&n,sizeof(request),"POST /api/v10/applications/") || put(request,&n,sizeof(request),config->application_id) || put(request,&n,sizeof(request),"/external-assets HTTP/1.1\r\nHost: discord.com\r\nUser-Agent: PS3Presence/0.4.0\r\nAuthorization: ") || put(request,&n,sizeof(request),config->token) || put(request,&n,sizeof(request),"\r\nContent-Type: application/json\r\nAccept-Encoding: identity\r\nConnection: close\r\nContent-Length: ") || put(request,&n,sizeof(request),digits+at) || put(request,&n,sizeof(request),"\r\n\r\n") || put(request,&n,sizeof(request),payload)) goto done;
     deadline=net_milliseconds()+10000;
     while(sent<n) {
         r=mbedtls_ssl_write(&ssl,(unsigned char *)request+sent,n-sent);

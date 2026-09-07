@@ -53,7 +53,7 @@ static unsigned read_buttons(void) {
 }
 int main(void) {
     struct discord_config config; char message[160]="FTP: " APP_CONFIG;
-    unsigned selected=0,previous=0; int install=0,readable;
+    unsigned selected=0,previous=0; int install=0,readable,view=APP_SETTINGS;
     app_defaults(&config); readable=app_config_load(APP_CONFIG,&config);
     if(readable<0) strcpy(message,"Configuration is invalid. Repair the file via FTP.");
     if(!screen_init()) { screen_end(); return 1; }
@@ -65,8 +65,26 @@ int main(void) {
         sysUtilCheckCallback(); screen_flip();
     }
     if(install && running) {
+        view=APP_INSTALLER;
         screen_draw(0,config.token[0]!=0,config.enabled,"Installing...",1); screen_flip();
-        app_install(message,sizeof(message)); readable=app_config_load(APP_CONFIG,&config);
+        int installed=app_install(message,sizeof(message));
+        readable=app_config_load(APP_CONFIG,&config);
+        if(installed) {
+            for(unsigned frame=0;frame<120 && running;frame++) {
+                screen_draw(0,0,0,"Restarting your PS3...",APP_RESTARTING);
+                sysUtilCheckCallback(); screen_flip();
+            }
+            if(running) {
+                if(app_request_restart()) {
+                    /* Service VSH's exit callback while it shuts down normally. */
+                    for(unsigned frame=0;frame<600 && running;frame++) {
+                        screen_draw(0,0,0,"Restarting your PS3...",APP_RESTARTING);
+                        sysUtilCheckCallback(); screen_flip();
+                    }
+                }
+                strcpy(message,"Installed. Automatic restart failed. Restart your PS3 manually.");
+            }
+        }
     }
     while(running || keyboard) {
         unsigned buttons=read_buttons(),pressed=buttons&~previous; previous=buttons;
@@ -90,24 +108,41 @@ int main(void) {
             discord_wipe(initial,sizeof(initial)); discord_wipe(entered,sizeof(entered)); keyboard_done=0;
         }
         if(!keyboard && running) {
-            if(pressed&3) selected^=1;
-            if(pressed&8) running=0;
-            if(pressed&4) {
-                if(app_config_load(APP_CONFIG,&config)<0) { readable=-1; strcpy(message,"Invalid configuration. Repair it via FTP first."); }
-                else {
-                    readable=1;
-                    if(selected==0) {
-                        if(!edit_token(config.token)) strcpy(message,"Could not open keyboard. Try again.");
-                    } else {
-                        config.enabled=!config.enabled;
-                        if(config.enabled && !config.token[0]) { config.enabled=0; strcpy(message,"Add your token before turning presence on."); }
-                        else if(app_config_save(APP_CONFIG,&config)) strcpy(message,config.enabled?"Presence ON. The running plugin will reconnect.":"Presence OFF. The running plugin will clear activity.");
-                        else { app_config_load(APP_CONFIG,&config); strcpy(message,"Could not save configuration."); }
+            if(view==APP_REMOVED) {
+                if(pressed&8) running=0;
+            } else if(view==APP_CONFIRM_REMOVE) {
+                if(pressed&8) { view=APP_SETTINGS; strcpy(message,"Uninstall cancelled."); }
+                else if(pressed&4) {
+                    screen_draw(selected,0,0,"Removing PS3 Presence...",APP_CONFIRM_REMOVE); screen_flip();
+                    int removed=app_uninstall(message,sizeof(message));
+                    discord_wipe(&config,sizeof(config));
+                    readable=removed?0:app_config_load(APP_CONFIG,&config);
+                    view=removed?APP_REMOVED:APP_SETTINGS;
+                }
+            } else {
+                if(pressed&1) selected=(selected+2)%3;
+                else if(pressed&2) selected=(selected+1)%3;
+                if(pressed&8) running=0;
+                else if(pressed&4 && selected==2) {
+                    view=APP_CONFIRM_REMOVE;
+                    strcpy(message,"This also deletes your saved Discord token.");
+                } else if(pressed&4) {
+                    if(app_config_load(APP_CONFIG,&config)<0) { readable=-1; strcpy(message,"Invalid configuration. Repair it via FTP first."); }
+                    else {
+                        readable=1;
+                        if(selected==0) {
+                            if(!edit_token(config.token)) strcpy(message,"Could not open keyboard. Try again.");
+                        } else {
+                            config.enabled=!config.enabled;
+                            if(config.enabled && !config.token[0]) { config.enabled=0; strcpy(message,"Add your token before turning presence on."); }
+                            else if(app_config_save(APP_CONFIG,&config)) strcpy(message,config.enabled?"Presence ON. The running plugin will reconnect.":"Presence OFF. The running plugin will clear activity.");
+                            else { app_config_load(APP_CONFIG,&config); strcpy(message,"Could not save configuration."); }
+                        }
                     }
                 }
             }
         }
-        screen_draw(selected,readable>=0 && config.token[0],readable>=0 && config.enabled,message,install);
+        screen_draw(selected,readable>=0 && config.token[0],readable>=0 && config.enabled,message,view);
         sysUtilCheckCallback(); screen_flip();
     }
     sysUtilUnregisterCallback(0); ioPadEnd(); screen_end(); discord_wipe(&config,sizeof(config)); return 0;

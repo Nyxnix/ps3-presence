@@ -4,9 +4,9 @@ export PS3DEV PSL1GHT
 CC := $(PS3DEV)/ppu/bin/ppu-gcc
 DEPFLAGS := -MMD -MP
 CFLAGS := -std=gnu99 -O2 -Wall -Wextra -Werror -Wno-misleading-indentation -I../include -I$(PSL1GHT)/ppu/include
-LIBS := -L$(PSL1GHT)/ppu/lib -lrsx -lgcm_sys -lio -lsysutil -lrt -llv2 -lm
+LIBS := -L$(PSL1GHT)/ppu/lib -lrsx -lgcm_sys -lio -lsysutil -lnet -lsysmodule -lrt -llv2 -lm
 CONTENT := UP0001-PS3RPC001_00-PS3PRESENCE000001
-OBJECTS := $(addprefix ../build/app/,$(addsuffix .o,main screen render settings config))
+OBJECTS := $(addprefix ../build/app/,$(addsuffix .o,main screen render settings restart uninstall uninstall_ps3 config))
 .PHONY: all
 all: ../dist/ps3-presence-installer.pkg
 ../build/app ../dist:
@@ -17,7 +17,8 @@ all: ../dist/ps3-presence-installer.pkg
 	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 ../build/app/presence-app.elf: $(OBJECTS)
 	$(CC) -Wl,-Map,../build/app/presence-app.map -o $@ $^ $(LIBS)
-../dist/ps3-presence-installer.pkg: ../build/app/presence-app.elf ../dist/ps3_presence.sprx ICON0.PNG | ../dist
+../dist/ps3-presence-installer.pkg: ../build/app/presence-app.elf ../dist/ps3_presence.sprx ICON0.PNG Makefile | ../dist
+	rm -rf ../build/app/pkg
 	mkdir -p ../build/app/pkg/USRDIR
 	$(PS3DEV)/ppu/bin/ppu-strip $< -o ../build/app/stripped.elf
 	$(PS3DEV)/bin/sprxlinker ../build/app/stripped.elf
@@ -28,4 +29,4 @@ all: ../dist/ps3-presence-installer.pkg
 	$(PS3DEV)/bin/pkg --contentid $(CONTENT) ../build/app/pkg/ $@
 	$(PS3DEV)/bin/package_finalize $@
 
--include $(OBJECTS:.o=.d)
+-include $(wildcard $(OBJECTS:.o=.d))

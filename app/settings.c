@@ -48,9 +48,14 @@ int app_config_save(const char *path,const struct discord_config *c) {
     if(ok) ok=replace_file(path,buf,(size_t)n);
     discord_wipe(buf,sizeof(buf)); discord_wipe(&checked,sizeof(checked)); return ok;
 }
-int app_boot_list(const char *in,size_t n,char *out,size_t cap) {
+int app_plugin_name(const char *name) {
+    size_t n=strlen(name);
+    return !strcmp(name,"ps3_presence.sprx") ||
+        (n>18 && !strncmp(name,"ps3_presence_",13) && !strcmp(name+n-5,".sprx"));
+}
+static int boot_list(const char *in,size_t n,char *out,size_t cap,int install) {
     size_t at=0,used=0; unsigned entries=0;
-    if(memchr(in,0,n)) return 0;
+    if(!cap || memchr(in,0,n)) return -1;
     while(at<n) {
         size_t start=at; while(at<n && in[at]!='\n') at++;
         size_t end=at; if(at<n) at++;
@@ -59,17 +64,47 @@ int app_boot_list(const char *in,size_t n,char *out,size_t cap) {
         while(left<right && (in[left]==' ' || in[left]=='\t')) left++;
         while(right>left && (in[right-1]==' ' || in[right-1]=='\t')) right--;
         size_t base=right; while(base>left && in[base-1]!='/') base--;
-        size_t len=right-base;
-        int own=(len==17 && !memcmp(in+base,"ps3_presence.sprx",17)) ||
-            (len>27 && !memcmp(in+base,"ps3_presence_combined_",22) && !memcmp(in+right-5,".sprx",5));
+        size_t len=right-base; char name[256];
+        int own=0;
+        if(left<right && in[left]!='#' && len<sizeof(name)) {
+            memcpy(name,in+base,len); name[len]=0; own=app_plugin_name(name);
+        }
         if(own) continue;
         if(left<right && in[left]!='#') entries++;
-        if(end-start+1>=cap-used) return 0;
-        memcpy(out+used,in+start,end-start); used+=end-start; out[used++]='\n';
+        if(at-start>=cap-used) return -1;
+        memcpy(out+used,in+start,at-start); used+=at-start;
     }
-    if(entries>=6 || sizeof(APP_PLUGIN)>=cap-used) return 0;
+    if(!install) { out[used]=0; return (int)used; }
+    if(entries>=6 || sizeof(APP_PLUGIN)+1>=cap-used) return -1;
+    if(used && out[used-1]!='\n') out[used++]='\n';
     memcpy(out+used,APP_PLUGIN,sizeof(APP_PLUGIN)-1); used+=sizeof(APP_PLUGIN)-1;
     out[used++]='\n'; out[used]=0; return (int)used;
+}
+int app_boot_list(const char *in,size_t n,char *out,size_t cap) {
+    int nout=boot_list(in,n,out,cap,1); return nout<0?0:nout;
+}
+int app_boot_remove(const char *in,size_t n,char *out,size_t cap) {
+    return boot_list(in,n,out,cap,0);
+}
+int app_remove_startup(void) {
+    const char *paths[]={APP_BOOT,APP_BOOT ".bak",APP_BOOT ".new"};
+    char original[8192],updated[8192];
+    for(unsigned i=0;i<sizeof(paths)/sizeof(paths[0]);i++) {
+        size_t n=0; int r=read_file(paths[i],original,sizeof(original),&n);
+        if(r<0) return 0;
+        if(!r) continue;
+        int length=app_boot_remove(original,n,updated,sizeof(updated));
+        if(length<0) return 0;
+        if((size_t)length==n && !memcmp(original,updated,n)) continue;
+        if(!i) { if(!replace_file(paths[i],updated,(size_t)length)) return 0; }
+        else {
+            FILE *f=fopen(paths[i],"wb"); if(!f) return 0;
+            int ok=fwrite(updated,1,(size_t)length,f)==(size_t)length && !fflush(f) && !fsync(fileno(f));
+            if(fclose(f)) ok=0;
+            if(!ok) return 0;
+        }
+    }
+    return 1;
 }
 int app_install(char *message,size_t cap) {
     char *blob=0,boot[8192],updated[8192]; size_t n=0; struct discord_config c;
@@ -95,7 +130,7 @@ int app_install(char *message,size_t cap) {
     if(!have && !app_config_save(APP_CONFIG,&c)) goto done;
     error="Could not update startup list. Previous list was retained.";
     if(!replace_file(APP_BOOT,updated,(size_t)length)) goto done;
-    ok=1; error="Installed. Restart your PS3 to activate this build.";
+    ok=1; error="Installed.";
 done:
     free(blob); discord_wipe(&c,sizeof(c)); snprintf(message,cap,"%s",error); return ok;
 }

@@ -1,5 +1,6 @@
 /* A bounded allocator owned exclusively by the network worker. */
 #include "tls_port.h"
+#include "diagnostics.h"
 #include <string.h>
 #define UNIT 32u
 #define UNITS (PRESENCE_TLS_ARENA_SIZE/UNIT)
@@ -20,7 +21,6 @@ void presence_arena_init(void *buffer) {
 void *presence_calloc(size_t n,size_t size) {
     size_t bytes,need,start=0,run=0,i;
 #ifdef __powerpc64__
-    extern void presence_stack_sample(unsigned);
     presence_stack_sample(1);
 #endif
     if(!arena || !n || !size || size>SIZE_MAX/n) return NULL;

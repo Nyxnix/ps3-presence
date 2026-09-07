@@ -1,15 +1,16 @@
 /* VSH detector and native Discord presence for CFW/Cobra. */
 #include "presence.h"
 #include "webman_status.h"
-extern void presence_stack_sample(unsigned);
+#include "diagnostics.h"
 #include <ppu-lv2.h>
 #include <sys/file.h>
 #include <sys/thread.h>
 #include <sys/systime.h>
 
+#define DISABLE "/dev_hdd0/tmp/ps3_presence.disable"
+#if PRESENCE_DIAGNOSTICS
 #define STATE "/dev_hdd0/tmp/ps3_presence.json"
 #define TEMP_STATE "/dev_hdd0/tmp/ps3_presence.json.tmp"
-#define DISABLE "/dev_hdd0/tmp/ps3_presence.disable"
 #define LOG "/dev_hdd0/tmp/ps3_presence.log"
 #define TRACE "/dev_hdd0/tmp/ps3_presence_trace.bin"
 #define TRACE_COUNT 256
@@ -40,10 +41,15 @@ static void trace_publish(void) {
         sysLv2FsClose(fd);
     }
 }
+#else
+static inline void trace_mark(uint32_t stage,uint32_t a,uint32_t b) { (void)stage; (void)a; (void)b; }
+#endif
 static volatile uint32_t running;
 static uint64_t worker_id;
 static uint64_t network_worker_id;
+#if PRESENCE_DIAGNOSTICS
 static uint32_t log_size;
+#endif
 static struct presence_session session;
 static volatile uint32_t session_lock;
 static void lock_session(void) { while(__sync_lock_test_and_set(&session_lock,1)) { lv2syscall1(141,100); } }
@@ -55,7 +61,9 @@ extern void presence_network_worker(uint64_t);
 
 void *memset(void *p,int c,size_t n) { unsigned char *b=p; while(n--) *b++=(unsigned char)c; return p; }
 void *memcpy(void *d,const void *s,size_t n) { unsigned char *a=d; const unsigned char *b=s; while(n--) *a++=*b++; return d; }
+#if PRESENCE_DIAGNOSTICS
 static size_t length(const char *s) { size_t n=0; while(s[n]) n++; return n; }
+#endif
 static int bounded_equal(const char *a,const char *b,size_t n) {
     size_t i; for(i=0;i<n;i++) { if(a[i]!=b[i]) return 0; if(!a[i]) return 1; } return 0;
 }
@@ -63,12 +71,18 @@ static int address_ok(uint32_t p,uint32_t size) {
     return p>=0x10000 && p<0x20000000 && size<=0x20000000-p;
 }
 static uint32_t read32(uint32_t p) { return *(volatile uint32_t *)(uintptr_t)p; }
+#if PRESENCE_DIAGNOSTICS
 static void log_text(const char *s);
 static void log_hex(uint32_t value) {
     char out[10]; unsigned i;
     for(i=0;i<8;i++) out[i]="0123456789abcdef"[(value>>(28-i*4))&15];
     out[8]='\n'; out[9]=0; log_text(out);
 }
+
+#else
+static inline void log_text(const char *s) { (void)s; }
+static inline void log_hex(uint32_t value) { (void)value; }
+#endif
 
 /* Based on the documented VSH export-table layout, with bounded walks.
  * Firmware support is intentionally limited; bounds are not a memory-map proof. */
@@ -110,6 +124,7 @@ static int disabled(void) {
     int32_t fd; if(sysLv2FsOpen(DISABLE,0,&fd,0,0,0)) return 0;
     sysLv2FsClose(fd); return 1;
 }
+#if PRESENCE_DIAGNOSTICS
 static void log_text(const char *s) {
     int32_t fd; uint64_t n=0; size_t size=length(s);
     if(log_size+size>65536) return;
@@ -134,6 +149,9 @@ static void publish_file(void) {
         if(err) { log_text("State rename failed: "); log_hex((uint32_t)err); }
     }
 }
+#else
+static inline void publish_file(void) {}
+#endif
 static void detect(struct observation *o) {
     trace_mark(40,0,0);
     int result=presence_webman_detect(o);
@@ -149,8 +167,11 @@ static int sample_temperatures(void) {
     return changed;
 }
 static void worker(uint64_t arg) {
-    (void)arg; int32_t fd; unsigned unavailable=0; uint64_t published_at=0,thermal_at=0;
+    (void)arg; unsigned unavailable=0; uint64_t published_at=0,thermal_at=0;
+#if PRESENCE_DIAGNOSTICS
+    int32_t fd;
     if(!sysLv2FsOpen(LOG,SYS_O_WRONLY|SYS_O_CREAT|SYS_O_TRUNC,&fd,0600,0,0)) sysLv2FsClose(fd);
+#endif
     log_text("PS3 Presence 0.4.0: loopback webMAN detector; native Discord client.\n");
     log_text("Detector trace v1 enabled; no direct game_plugin calls.\n");
     trace_mark(1,0,0);
@@ -173,7 +194,9 @@ static void worker(uint64_t arg) {
         struct observation o; uint64_t seconds=0,nanoseconds=0;
         int thermal_changed=0;
         { lv2syscall2(145,(uint64_t)&seconds,(uint64_t)&nanoseconds); }
+#if PRESENCE_DIAGNOSTICS
         trace_seconds=(uint32_t)seconds;
+#endif
         if(!thermal_at || seconds<thermal_at || seconds-thermal_at>=30) { thermal_changed=sample_temperatures(); thermal_at=seconds; }
         detect(&o);
         trace_mark(21,(uint32_t)o.mode,0);

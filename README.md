@@ -44,24 +44,26 @@ Show what you’re playing on Discord with game artwork, console information, te
 
 ### Installation
 
-1. Download `ps3-presence-installer.pkg` from [Releases](https://github.com/Nyxnix/ps3-presence/releases) and install it through the CFW Package Manager. See [Building](#building) to build from source.
+1. Download and extract the binary ZIP from [Releases](https://github.com/Nyxnix/ps3-presence/releases), then install `ps3-presence-installer.pkg` through the CFW Package Manager. See [Building](#building) to build from source.
 2. In **Game**, hold **L1** while launching **PS3 Presence**. Keep holding it through the starting screen.
-3. Wait for the installation-success message, then restart the PS3.
+3. Wait for the installation-success message. The installer asks webMAN to restart the PS3 normally to activate the plugin.
 4. Launch **PS3 Presence** normally, select **Token**, and enter your token.
 5. Set **Presence** to **ON** and press **Circle** to return to the XMB.
 
-The installer preserves your configuration and other startup plugins. To update, install the newer package, launch it while holding L1, and restart again.
+The installer preserves your configuration and other startup plugins. To update, install the newer package and launch it while holding L1; it will restart automatically after installation succeeds. If automatic restart fails, restart the PS3 manually.
 
 ### Controls
 
 | Button | Action |
 | --- | --- |
-| Up / Down | Select Token or Presence |
-| X | Edit the token or toggle presence |
+| Up / Down | Select Token, Presence, or Uninstall |
+| X | Choose the selected action |
 | Circle | Exit the configuration app |
 | Hold L1 during launch | Install or update the plugin |
 
 Tokens are masked in the configuration screen. A new installation starts with presence OFF until you add a token and enable it.
+
+To remove everything, select **Uninstall** and confirm with **X**; **Circle** cancels. This stops the plugin and removes its startup entries, saved token, settings, diagnostic files, and the app itself. Other apps and plugins are preserved. Cobra syscalls must be enabled for uninstall.
 
 ## ⚙️ Configuration
 
@@ -143,6 +145,8 @@ The required dependency, PRX packaging, and verification helpers are included un
 
 `make all` builds both outputs. `make inspect` checks the plugin's PRX structure and relocations. `make clean` removes generated files from `build/` and `dist/`, keeping downloaded dependencies for the next build.
 
+Diagnostic logs, state snapshots, and stack sampling are disabled by default. To build with them enabled, use `make DIAGNOSTICS=1 all inspect`. Diagnostic files are written under `/dev_hdd0/tmp/ps3_presence*`; returning to `make all inspect` disables them again.
+
 ## 🐞 Issues
 
 [Open an issue](https://github.com/Nyxnix/ps3-presence/issues) with your firmware, Cobra/webMAN versions, game title ID, and steps to reproduce the problem. Remove credentials and personal identifiers before attaching diagnostic output.
@@ -156,4 +160,6 @@ The required dependency, PRX packaging, and verification helpers are included un
 
 ## License
 
-[GPL-3.0-only](LICENSE). See [third-party notices](licenses/THIRD_PARTY.txt) and the `licenses/` directory for dependency and asset attribution. PlayStation trademarks belong to Sony.
+Project-authored code is [GPL-3.0-only](LICENSE). Third-party code and assets retain their own terms; see [third-party notices](licenses/THIRD_PARTY.txt). PlayStation trademarks belong to Sony. Game artwork and screenshot content are not covered by the project's GPL license.
+
+Builds copy notices to `dist/licenses`. Distribute these alongside the installer and standalone plugin in the release ZIP, and provide access to the exact matching source and dependencies.

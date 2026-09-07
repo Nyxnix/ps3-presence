@@ -1,6 +1,7 @@
 #ifndef PRESENCE_APP_SCREEN_H
 #define PRESENCE_APP_SCREEN_H
 #include <stdint.h>
+enum app_view { APP_SETTINGS, APP_INSTALLER, APP_CONFIRM_REMOVE, APP_REMOVED, APP_RESTARTING };
 int screen_init(void);
 void screen_draw(unsigned selected,int token_set,int enabled,const char *message,int installer);
 void screen_flip(void);

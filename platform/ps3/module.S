@@ -4,7 +4,7 @@
 .global presence_module_info
 presence_module_info:
     .short 0
-    .byte 0,3
+    .byte 0,4
     .asciz "ps3_presence"
     .space 15
     .long __presence_toc

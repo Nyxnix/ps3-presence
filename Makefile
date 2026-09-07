@@ -4,16 +4,22 @@ export PS3DEV PSL1GHT
 CC_PPU := $(PS3DEV)/ppu/bin/ppu-gcc
 PYTHON ?= python3
 DEPFLAGS := -MMD -MP
+DIAGNOSTICS ?= 0
+ifneq ($(DIAGNOSTICS),$(filter $(DIAGNOSTICS),0 1))
+$(error DIAGNOSTICS must be 0 or 1)
+endif
 CFLAGS_PPU := -std=gnu99 -O2 -Wall -Wextra -Werror -ffreestanding -fno-builtin -fno-stack-protector -fno-asynchronous-unwind-tables -mminimal-toc -ffunction-sections -fdata-sections -fstack-usage -Iinclude -I$(PSL1GHT)/ppu/include
 # PPU GCC 7.2 ICEs at -Os. LTO removes unused TLS routines before the
 # PowerPC function descriptors can retain them. Native ABI adapters stay non-LTO.
 TLS_CFLAGS_PPU := $(filter-out -O2,$(CFLAGS_PPU)) -O1 -flto -fno-fat-lto-objects
+CFLAGS_PPU += -DPRESENCE_DIAGNOSTICS=$(DIAGNOSTICS)
+TLS_CFLAGS_PPU += -DPRESENCE_DIAGNOSTICS=$(DIAGNOSTICS)
 # GCC 7 warns across Mbed TLS's checked ECDH output-length call under LTO.
 # Keep this library-only warning visible; project sources remain -Werror.
 LINK_PPU := $(CC_PPU) $(TLS_CFLAGS_PPU) -Wno-error=maybe-uninitialized -save-temps=obj -fuse-linker-plugin -nostdlib
 TLS_DIR := deps/mbedtls-3.6.6
 TLS_FLAGS := -I$(TLS_DIR)/include -Ibuild -DMBEDTLS_CONFIG_FILE='"mbedtls_ps3_config.h"'
-NET_NAMES := roots memory_owner webman_status arena utc websocket websocket_stream gateway_hello transport artwork_tls presence_clock
+NET_NAMES := roots memory_owner webman_status arena utc websocket websocket_stream transport artwork_tls presence_clock
 DISCORD_NAMES := config wire gateway gateway_json client artwork artwork_session
 PS3_NAMES := network strings diagnostics webman
 OBJS := build/session.o build/plugin.o build/module.o $(addprefix build/,$(addsuffix .o,$(NET_NAMES) $(PS3_NAMES) $(DISCORD_NAMES)))
@@ -21,13 +27,21 @@ TLS_NAMES := aes asn1parse asn1write base64 bignum bignum_core bignum_mod bignum
 TLS_OBJS := $(addprefix build/tls/,$(addsuffix .o,$(TLS_NAMES)))
 LIBGCC = $(shell $(CC_PPU) -print-libgcc-file-name)
 
-.PHONY: all installer inspect clean
+.PHONY: all installer notices inspect clean
 all: installer
-installer: dist/ps3_presence.sprx
+installer: dist/ps3_presence.sprx notices
 	$(MAKE) -C app all
+notices: | dist
+	rm -rf dist/licenses
+	mkdir -p dist/licenses
+	cp LICENSE licenses/*.txt dist/licenses/
 
 build dist build/tls:
 	mkdir -p $@
+build/diagnostics-$(DIAGNOSTICS): | build
+	rm -f build/diagnostics-*
+	touch $@
+$(OBJS) $(TLS_OBJS): build/diagnostics-$(DIAGNOSTICS)
 build/roots.h: certs/gts-roots.pem tools/fetch-deps.py tools/embed_roots.py | build
 	$(PYTHON) tools/fetch-deps.py
 build/%.o: net/%.c build/roots.h include/mbedtls_ps3_config.h Makefile
@@ -55,4 +69,5 @@ inspect: dist/ps3_presence.sprx
 clean:
 	rm -rf build dist
 
--include $(OBJS:.o=.d) $(TLS_OBJS:.o=.d)
+$(OBJS:.o=.d) $(TLS_OBJS:.o=.d): ;
+-include $(wildcard $(OBJS:.o=.d) $(TLS_OBJS:.o=.d))

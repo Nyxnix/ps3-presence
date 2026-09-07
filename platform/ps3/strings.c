@@ -10,5 +10,5 @@ char *strchr(const char *s,int c) { do { if(*s==(char)c) return (char *)s; } whi
 char *strstr(const char *s,const char *t) { size_t n=strlen(t); if(!n) return (char *)s; for(;*s;s++) if(!strncmp(s,t,n)) return (char *)s; return NULL; }
 void *memmove(void *d,const void *s,size_t n) { unsigned char *a=d; const unsigned char *b=s; if((uintptr_t)a<(uintptr_t)b) { while(n--) *a++=*b++; } else { while(n) { n--; a[n]=b[n]; } } return d; }
 /* Human-readable certificate/ASN.1 formatting is deliberately unavailable;
- * the probe uses structured numeric status and never calls those helpers. */
+ * diagnostics use structured numeric status and never calls those helpers. */
 int snprintf(char *s,size_t n,const char *format,...) { (void)format; if(n) s[0]=0; return -1; }
